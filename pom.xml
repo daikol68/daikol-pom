@@ -1,0 +1,589 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>de.daikol</groupId>
+    <artifactId>daikol-pom</artifactId>
+    <version>1.0.2</version>
+    <packaging>pom</packaging>
+    <name>Corporate Maven Configuration</name>
+    <description>A corporate pom.xml all projects should use as parent to inherit default maven settings.</description>
+
+    <scm>
+        <connection>scm:svn:https://svn3.sliksvn.com/davidkowol_maven/Corporate POM/trunk</connection>
+    </scm>
+
+    <!-- default value for organisation -->
+    <organization>
+        <name>David Kowol - IT Solutions</name>
+    </organization>
+
+    <!-- The default license that should be used. -->
+    <licenses>
+        <license>
+            <name>David Kowol - IT Solutions</name>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+
+    <properties>
+
+        <!-- The source code compliance. -->
+        <maven.compiler.source>1.8</maven.compiler.source>
+
+        <!-- The version of the runtime that should be used -->
+        <maven.compiler.target>1.8</maven.compiler.target>
+
+        <!-- The timestamp format to use -->
+        <maven.build.timestamp.format>dd.MM.yyyy HH:mm</maven.build.timestamp.format>
+
+        <!-- The encoding the compiler should use -->
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
+        <!-- The encoding the reporter should use -->
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+
+        <!-- the artifact id will be used as project name if not set -->
+        <project.name>${project.artifactId}</project.name>
+
+        <!-- the copyright value -->
+        <organization.copyright>(c) ${project.organization.name}</organization.copyright>
+
+        <!-- the name that should be used for the final name of a package -->
+        <project.build.finalName>${project.artifactId}-${project.version}</project.build.finalName>
+
+        <!-- default value if rpm plugin should be skipped -->
+        <rpm.skip>false</rpm.skip>
+
+        <rpm.name>${project.artifactId}</rpm.name>
+        <rpm.version>${project.version}</rpm.version>
+
+    </properties>
+
+    <!-- profiles with some environment specific settings -->
+    <profiles>
+
+        <!-- on a windows os the rpm plugin will be skipped -->
+        <profile>
+            <id>NO_RPM</id>
+            <activation>
+                <os>
+                    <family>windows</family>
+                </os>
+            </activation>
+            <properties>
+                <rpm.skip>true</rpm.skip>
+            </properties>
+        </profile>
+
+        <profile>
+            <id>GET_SVN_PROPERTIES</id>
+            <activation>
+                <property>
+                    <name>!svn.tag.base</name>
+                </property>
+            </activation>
+            <properties>
+                <svn.tag.base>${project.scm.connection}/tags</svn.tag.base>
+            </properties>
+        </profile>
+    </profiles>
+
+    <distributionManagement>
+        <repository>
+            <id>archiva.internal</id>
+            <name>Internal Release Repository</name>
+            <url>http://192.168.5.65:8081/repository/internal/</url>
+        </repository>
+        <snapshotRepository>
+            <id>archiva.snapshots</id>
+            <name>Internal Snapshot Repository</name>
+            <url>http://192.168.5.65:8081/repository/snapshots/</url>
+        </snapshotRepository>
+    </distributionManagement>
+
+    <!-- configuration for the build, that consists of two parts 1. pluginManagement - default configuration for the plugins that should
+      be inherited if the plugin is used 2. plugins the plugins that should be used in inheriting projects -->
+    <build>
+        <pluginManagement>
+            <plugins>
+
+                <plugin>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>versions-maven-plugin</artifactId>
+                    <version>2.1</version>
+                    <configuration>
+                        <allowSnapshots>true</allowSnapshots>
+                        <generateBackupPoms>false</generateBackupPoms>
+                    </configuration>
+                </plugin>
+
+                <!-- the default maven relase plugin -->
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-release-plugin</artifactId>
+                    <version>2.5.1</version>
+                    <configuration>
+                        <providerImplementations>
+                            <svn>javasvn</svn>
+                        </providerImplementations>
+                    </configuration>
+                </plugin>
+
+                <plugin>
+                    <groupId>com.amashchenko.maven.plugin</groupId>
+                    <artifactId>gitflow-maven-plugin</artifactId>
+                    <version>1.13.0</version>
+                </plugin>
+
+                <!-- a plugin to create a build number and a release number for each version !!! scm informations must be set to use this plugin
+                  !!! hopefully this properties will be set if using the release plugin -->
+                <plugin>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>buildnumber-maven-plugin</artifactId>
+                    <version>1.3</version>
+                    <executions>
+                        <execution>
+                            <id>create-buildnumber</id>
+                            <phase>validate</phase>
+                            <goals>
+                                <goal>create</goal>
+                            </goals>
+                        </execution>
+                        <execution>
+                            <id>create-metadata</id>
+                            <phase>package</phase>
+                            <goals>
+                                <goal>create-metadata</goal>
+                            </goals>
+                            <configuration>
+                                <attach>true</attach>
+                                <!--make it available for jar/war classpath resource -->
+                                <addOutputDirectoryToResources>true</addOutputDirectoryToResources>
+                            </configuration>
+                        </execution>
+                    </executions>
+                    <configuration>
+                        <shortRevisionLength>4</shortRevisionLength>
+                        <doCheck>true</doCheck>
+                        <doUpdate>true</doUpdate>
+                    </configuration>
+                </plugin>
+
+                <plugin>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>build-helper-maven-plugin</artifactId>
+                    <version>1.9.1</version>
+                    <executions>
+                        <execution>
+                            <id>parse-version</id>
+                            <phase>validate</phase>
+                            <goals>
+                                <goal>parse-version</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                    <configuration>
+                        <propertyPrefix>parsedVersion</propertyPrefix>
+                        <versionString>${project.version}</versionString>
+                    </configuration>
+                </plugin>
+
+                <!-- create a site -->
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-site-plugin</artifactId>
+                    <version>3.4</version>
+                </plugin>
+
+                <!-- a plugin which can be used to get some informations, f.e. environment informations -->
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-help-plugin</artifactId>
+                    <version>2.1</version>
+                </plugin>
+
+                <!-- a plugin which is used to retrieve the status and revision number of files under version control -->
+                <plugin>
+                    <groupId>com.google.code.maven-svn-revision-number-plugin</groupId>
+                    <artifactId>svn-revision-number-maven-plugin</artifactId>
+                    <version>1.13</version>
+                    <executions>
+                        <execution>
+                            <phase>validate</phase>
+                            <goals>
+                                <goal>revision</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                    <configuration>
+                        <failOnError>false</failOnError>
+                        <entries>
+                            <entry>
+                                <prefix>subversion</prefix>
+                            </entry>
+                        </entries>
+                    </configuration>
+                </plugin>
+
+                <!-- a plugin which can be used to unpack sources from other projects -->
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-dependency-plugin</artifactId>
+                    <version>2.8</version>
+                </plugin>
+
+                <!-- a plugin that is used to clean the workspace -->
+                <plugin>
+                    <artifactId>maven-clean-plugin</artifactId>
+                    <version>2.5</version>
+                </plugin>
+
+                <!-- the compiler plugin to define source, target and encoding -->
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <version>3.1</version>
+                    <configuration>
+                        <source>${maven.compiler.source}</source>
+                        <target>${maven.compiler.target}</target>
+                        <encoding>${project.build.sourceEncoding}</encoding>
+                    </configuration>
+                </plugin>
+
+                <!-- the surefire plugin is used to run unit tests and create a report -->
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-surefire-plugin</artifactId>
+                    <version>2.19.1</version>
+                    <configuration>
+                        <redirectTestOutputToFile>true</redirectTestOutputToFile>
+                    </configuration>
+                </plugin>
+
+                <!-- fuer die Messung der Testabdeckung in SonarQube -->
+                <plugin>
+                    <groupId>org.jacoco</groupId>
+                    <artifactId>jacoco-maven-plugin</artifactId>
+                    <version>0.7.5.201505241946</version>
+                    <configuration>
+                        <destFile>target/jacoco.exec</destFile>
+                        <dataFile>target/jacoco.exec</dataFile>
+                    </configuration>
+                    <executions>
+                        <execution>
+                            <id>default-prepare-agent</id>
+                            <goals>
+                                <goal>prepare-agent</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
+
+                <!-- for integration tests -->
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-failsafe-plugin</artifactId>
+                    <version>2.18.1</version>
+                    <executions>
+                        <execution>
+                            <id>integration-test</id>
+                            <goals>
+                                <goal>integration-test</goal>
+                                <goal>verify</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
+
+                <!-- the verify plugin is used for integration tests and verifies the existence of certain conditions -->
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-verifier-plugin</artifactId>
+                    <version>1.0</version>
+                </plugin>
+
+                <!-- the plugin that is used to deploy the final package in the local repository. the plugin is only defined here to specify
+                  the version that should be used -->
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-install-plugin</artifactId>
+                    <version>2.3.1</version>
+                </plugin>
+
+                <!-- the plugin that is used to deploy the final package in the remote repository defined in distributionManagement. the plugin
+                  is only defined here to specify the version that should be used -->
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-deploy-plugin</artifactId>
+                    <version>2.7</version>
+                </plugin>
+
+                <!-- a plugin that can be used to package files in a jar which are not under src/main/ressources. this plugin also can be used
+                  to replace place marker with variables from maven with a filter -->
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-resources-plugin</artifactId>
+                    <version>2.7</version>
+                </plugin>
+
+                <!-- a plugin ant tasks can be defined within. -->
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-antrun-plugin</artifactId>
+                    <version>1.7</version>
+                    <!-- here is an example how to use this plugin. the only goal 'run' is assigned to the phase 'package' because a file will
+                      be copied. if a target should be defined that runs tests, it will be bound to the phase 'test'. <executions> <execution> <phase>package</phase>
+                      <configuration> <target> <copy file="${basedir}/src/main/resources/${jboss-instance}.install.xls" tofile="${project.build.directory}/rpm/${rpm-name}/RPMS/noarch/${rpm-name}-${service-version}-${revision-number}.xls" /> </target> </configuration> <goals> <goal>run</goal> </goals> </execution> </executions> -->
+                </plugin>
+
+                <!-- the plugin to create a jar. this configuration will create a few entries in the manifest containing informations about
+                  version, revision etc. -->
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-jar-plugin</artifactId>
+                    <version>2.4</version>
+                    <configuration>
+                        <finalName>${project.build.finalName}</finalName>
+                        <archive>
+                            <manifest>
+                                <addDefaultImplementationEntries>false</addDefaultImplementationEntries>
+                                <addDefaultSpecificationEntries>false</addDefaultSpecificationEntries>
+                            </manifest>
+                            <manifestEntries>
+                                <Implementation-Vendor>${project.organization.name}</Implementation-Vendor>
+                                <Implementation-Title>${project.name}</Implementation-Title>
+                                <Implementation-Version>${project.version}</Implementation-Version>
+                                <Copyright>${organization.copyright}</Copyright>
+                                <Built-By>${user.name}</Built-By>
+                                <Build-Time>${maven.build.timestamp}</Build-Time>
+                                <Build-Jdk>${java.version}</Build-Jdk>
+                            </manifestEntries>
+                        </archive>
+                    </configuration>
+                </plugin>
+
+                <!-- the plugin to create a war. this configuration will create a few entries in the manifest containing informations about
+                  version, revision etc. -->
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-war-plugin</artifactId>
+                    <version>2.3</version>
+                    <configuration>
+                        <warName>${project.build.finalName}</warName>
+                        <archive>
+                            <manifest>
+                                <addDefaultImplementationEntries>false</addDefaultImplementationEntries>
+                                <addDefaultSpecificationEntries>false</addDefaultSpecificationEntries>
+                            </manifest>
+                            <manifestEntries>
+                                <Implementation-Vendor>${project.organization.name}</Implementation-Vendor>
+                                <Implementation-Title>${project.name}</Implementation-Title>
+                                <Implementation-Version>${project.version}</Implementation-Version>
+                                <Copyright>${organization.copyright}</Copyright>
+                                <Built-By>${user.name}</Built-By>
+                                <Build-Time>${maven.build.timestamp}</Build-Time>
+                                <Build-Jdk>${java.version}</Build-Jdk>
+                            </manifestEntries>
+                        </archive>
+                    </configuration>
+                </plugin>
+
+                <!-- the plugin to create an ejb. this configuration will create a few entries in the manifest containing informations about
+                  version, revision etc. -->
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-ejb-plugin</artifactId>
+                    <version>2.3</version>
+                    <configuration>
+                        <finalName>${project.build.finalName}</finalName>
+                        <archive>
+                            <manifest>
+                                <addDefaultImplementationEntries>false</addDefaultImplementationEntries>
+                                <addDefaultSpecificationEntries>false</addDefaultSpecificationEntries>
+                            </manifest>
+                            <manifestEntries>
+                                <Implementation-Vendor>${project.organization.name}</Implementation-Vendor>
+                                <Implementation-Title>${project.name}</Implementation-Title>
+                                <Implementation-Version>${project.version}</Implementation-Version>
+                                <Implementation-Build>${project.build}</Implementation-Build>
+                                <Copyright>${organization.copyright}</Copyright>
+                                <Built-By>${user.name}</Built-By>
+                                <Build-Time>${maven.build.timestamp}</Build-Time>
+                                <Build-Jdk>${java.version}</Build-Jdk>
+                            </manifestEntries>
+                        </archive>
+                    </configuration>
+                </plugin>
+
+                <!-- the plugin to create an ear. this configuration will create a few entries in the manifest containing informations about
+                  version, revision etc. -->
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-ear-plugin</artifactId>
+                    <version>2.8</version>
+                    <configuration>
+                        <finalName>${project.build.finalName}</finalName>
+                        <archive>
+                            <manifest>
+                                <addDefaultImplementationEntries>false</addDefaultImplementationEntries>
+                                <addDefaultSpecificationEntries>false</addDefaultSpecificationEntries>
+                            </manifest>
+                            <manifestEntries>
+                                <Implementation-Vendor>${project.organization.name}</Implementation-Vendor>
+                                <Implementation-Title>${project.name}</Implementation-Title>
+                                <Implementation-Version>${project.version}</Implementation-Version>
+                                <Copyright>${organization.copyright}</Copyright>
+                                <Built-By>${user.name}</Built-By>
+                                <Build-Time>${maven.build.timestamp}</Build-Time>
+                                <Build-Jdk>${java.version}</Build-Jdk>
+                            </manifestEntries>
+                        </archive>
+                    </configuration>
+                </plugin>
+
+                <!-- the plugin to create a rpm. -->
+                <plugin>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>rpm-maven-plugin</artifactId>
+                    <version>2.1-alpha-1</version>
+                    <extensions>true</extensions>
+
+                    <configuration>
+                        <name>daikol-${rpm.name}</name>
+                        <version>${rpm.version}</version>
+                        <vendor>${project.organization.name}</vendor>
+                        <url>${project.organization.url}</url>
+                        <copyright>${organization.copyright}</copyright>
+                        <group>Applications/Productivity</group>
+                        <packager>${user.name}</packager>
+                        <needarch>false</needarch>
+                        <autoRequires>false</autoRequires>
+                        <autoProvides>false</autoProvides>
+                        <summary>${project.description}</summary>
+                    </configuration>
+                </plugin>
+
+                <!-- plugin to create source jars -->
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-source-plugin</artifactId>
+                    <version>2.2.1</version>
+                    <configuration>
+                        <finalName>${project.build.finalName}</finalName>
+                        <includePom>true</includePom>
+                        <archive>
+                            <manifest>
+                                <addDefaultImplementationEntries>false</addDefaultImplementationEntries>
+                                <addDefaultSpecificationEntries>false</addDefaultSpecificationEntries>
+                            </manifest>
+                            <manifestEntries>
+                                <Implementation-Vendor>${project.organization.name}</Implementation-Vendor>
+                                <Implementation-Title>${project.name}</Implementation-Title>
+                                <Implementation-Version>${project.version}</Implementation-Version>
+                                <Copyright>${organization.copyright}</Copyright>
+                                <Built-By>${user.name}</Built-By>
+                                <Build-Time>${maven.build.timestamp}</Build-Time>
+                                <Build-Jdk>${java.version}</Build-Jdk>
+                            </manifestEntries>
+                        </archive>
+                    </configuration>
+                    <executions>
+                        <execution>
+                            <id>attach-sources</id>
+                            <goals>
+                                <goal>jar</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
+
+                <!-- plugin to create javadoc jars -->
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-javadoc-plugin</artifactId>
+                    <version>2.9.1</version>
+                    <configuration>
+                        <finalName>${project.build.finalName}</finalName>
+                        <failOnError>false</failOnError>
+                        <archive>
+                            <manifest>
+                                <addDefaultImplementationEntries>false</addDefaultImplementationEntries>
+                                <addDefaultSpecificationEntries>false</addDefaultSpecificationEntries>
+                            </manifest>
+                            <manifestEntries>
+                                <Implementation-Vendor>${project.organization.name}</Implementation-Vendor>
+                                <Implementation-Title>${project.name}</Implementation-Title>
+                                <Implementation-Version>${project.version}</Implementation-Version>
+                                <Copyright>${organization.copyright}</Copyright>
+                                <Built-By>${user.name}</Built-By>
+                                <Build-Time>${maven.build.timestamp}</Build-Time>
+                                <Build-Jdk>${java.version}</Build-Jdk>
+                            </manifestEntries>
+                        </archive>
+                    </configuration>
+                    <executions>
+                        <execution>
+                            <id>attach-javadoc</id>
+                            <goals>
+                                <goal>jar</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
+
+                <!-- a plugin to create informations about the project -->
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-project-info-reports-plugin</artifactId>
+                    <version>2.8</version>
+                    <executions>
+                        <execution>
+                            <phase>pre-site</phase>
+                        </execution>
+                    </executions>
+                </plugin>
+                <plugin>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>properties-maven-plugin</artifactId>
+                    <version>1.0-alpha-2</version>
+                </plugin>
+            </plugins>
+
+        </pluginManagement>
+
+        <!-- a few plugins that should always be used -->
+        <plugins>
+
+            <!-- the svn plugin should always be used if a connection to scm exists. a profile will skip the execution if the user is not
+              in a domain where he can reach the scm, f.e. homeoffice -->
+            <plugin>
+                <groupId>com.google.code.maven-svn-revision-number-plugin</groupId>
+                <artifactId>svn-revision-number-maven-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
+
+    <!-- a few repositories if no nexus is reachable -->
+    <repositories>
+        <repository>
+            <id>eviware</id>
+            <name>Eviware SOAP UI</name>
+            <url>http://eviware.com/repository/maven2</url>
+        </repository>
+        <repository>
+            <id>osgeo</id>
+            <name>Open Source Geotools</name>
+            <url>http://download.osgeo.org/webdav/geotools</url>
+        </repository>
+        <repository>
+            <id>jenkins</id>
+            <name>Jenkins CI</name>
+            <url>http://repo.jenkins-ci.org/public</url>
+        </repository>
+        <repository>
+            <id>zk</id>
+            <name>ZK Frontend</name>
+            <url>http://mavensync.zkoss.org/maven2</url>
+        </repository>
+    </repositories>
+</project>
