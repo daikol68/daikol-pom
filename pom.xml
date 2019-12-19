@@ -9,7 +9,7 @@
     <description>A corporate pom.xml all projects should use as parent to inherit default maven settings.</description>
 
     <scm>
-        <connection>scm:svn:https://svn3.sliksvn.com/davidkowol_maven/Corporate POM/trunk</connection>
+        <connection>scm:git:https://github.com/daikol68/daikol-pom</connection>
     </scm>
 
     <!-- default value for organisation -->
