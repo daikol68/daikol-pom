@@ -2,7 +2,7 @@ pipeline {
   agent any
   environment {
     branch = 'master'
-    scmUrl = 'ssh://daikol68@https://github.com/daikol68/daikol-pom'
+    scmUrl = 'https://github.com/daikol68/daikol-pom'
   }
   stages {
     stage('checkout git') {
