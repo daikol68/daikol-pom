@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>de.daikol</groupId>
     <artifactId>daikol-pom</artifactId>
-    <version>1.0.2</version>
+    <version>1.0.3</version>
     <packaging>pom</packaging>
     <name>Corporate Maven Configuration</name>
     <description>A corporate pom.xml all projects should use as parent to inherit default maven settings.</description>
@@ -72,18 +72,6 @@
             </activation>
             <properties>
                 <rpm.skip>true</rpm.skip>
-            </properties>
-        </profile>
-
-        <profile>
-            <id>GET_SVN_PROPERTIES</id>
-            <activation>
-                <property>
-                    <name>!svn.tag.base</name>
-                </property>
-            </activation>
-            <properties>
-                <svn.tag.base>${project.scm.connection}/tags</svn.tag.base>
             </properties>
         </profile>
     </profiles>
@@ -550,17 +538,6 @@
             </plugins>
 
         </pluginManagement>
-
-        <!-- a few plugins that should always be used -->
-        <plugins>
-
-            <!-- the svn plugin should always be used if a connection to scm exists. a profile will skip the execution if the user is not
-              in a domain where he can reach the scm, f.e. homeoffice -->
-            <plugin>
-                <groupId>com.google.code.maven-svn-revision-number-plugin</groupId>
-                <artifactId>svn-revision-number-maven-plugin</artifactId>
-            </plugin>
-        </plugins>
     </build>
 
     <!-- a few repositories if no nexus is reachable -->
