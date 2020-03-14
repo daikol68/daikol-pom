@@ -13,7 +13,7 @@ pipeline {
 
     stage('deploy'){
       steps {
-        sh 'mvn clean deploy -DrepositoryId=daikol'
+        sh 'mvn clean deploy'
       }
     }
   }
