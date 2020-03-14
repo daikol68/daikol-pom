@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>de.daikol</groupId>
     <artifactId>daikol-pom</artifactId>
-    <version>1.0.3</version>
+    <version>1.0.4-SNAPSHOT</version>
     <packaging>pom</packaging>
     <name>Corporate Maven Configuration</name>
     <description>A corporate pom.xml all projects should use as parent to inherit default maven settings.</description>
